@@ -12,8 +12,15 @@ const server = http.createServer((req, res) => {
 
   if (parsed.pathname === '/callback') {
     const code = parsed.query.code;
+    const error = parsed.query.error;
+    
+    if (error) {
+      res.end('Whoop error: ' + error + ' - ' + parsed.query.error_description);
+      return;
+    }
+    
     if (!code) {
-      res.end('No code');
+      res.end('No code. Full URL: ' + req.url);
       return;
     }
 
