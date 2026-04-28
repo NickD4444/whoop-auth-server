@@ -5,7 +5,7 @@ const url = require('url');
 const CLIENT_ID = '37a219fd-de4d-4ed5-b329-342be8b73876';
 const CLIENT_SECRET = 'f4c66251669621aa6a4d69a1acd7a10e2ff7729ae317ea0f1f7f0c570e4ebcf1';
 const REDIRECT_URI = 'https://whoop-auth-server.onrender.com/callback';
-const APP_SCHEME = 'whoop://healthdash/token';
+const APP_SCHEME = 'healthdash://token';
 
 const server = http.createServer((req, res) => {
   const parsed = url.parse(req.url, true);
