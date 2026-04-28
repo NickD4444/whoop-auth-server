@@ -88,12 +88,13 @@ const server = http.createServer((req, res) => {
     const password = params.get('password');
 
     const loginBody = JSON.stringify({
-      email,
-      password,
-      client_id: '0894c7f33bb94800a03f1f4df13a4f38',
-      client_secret: 'f0954a3e0e9b47348e98fc5f0b2d45c3b4ba1790e65973febc690037bdadceba',
-      grant_type: 'password',
-    });
+  email,
+  password,
+  client_id: '0894c7f33bb94800a03f1f4df13a4f38',
+  client_secret: 'f0954a3e0e9b47348e98fc5f0b2d45c3b4ba1790e65973febc690037bdadceba',
+  grant_type: 'password',
+  device_id: 'ios_' + Math.random().toString(36).substring(2, 15),
+});
 
     const options = {
       hostname: 'auth-api.8slp.net',
