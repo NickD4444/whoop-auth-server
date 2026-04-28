@@ -143,7 +143,43 @@ const server = http.createServer((req, res) => {
     });
     sleepReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
     sleepReq.end();
+} else if (parsed.pathname === '/refresh') {
+    let reqBody = '';
+    req.on('data', chunk => reqBody += chunk);
+    req.on('end', () => {
+      const params = new URLSearchParams(reqBody);
+      const refreshToken = params.get('refresh_token');
 
+      const body = [
+        'grant_type=refresh_token',
+        '&refresh_token=' + refreshToken,
+        '&client_id=' + CLIENT_ID,
+        '&client_secret=' + CLIENT_SECRET,
+      ].join('');
+
+      const options = {
+        hostname: 'api.prod.whoop.com',
+        path: '/oauth/oauth2/token',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      };
+
+      const whoopReq = https.request(options, (whoopRes) => {
+        let data = '';
+        whoopRes.on('data', chunk => data += chunk);
+        whoopRes.on('end', () => {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(data);
+        });
+      });
+      whoopReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+      whoopReq.write(body);
+      whoopReq.end();
+    });
+    
   } else {
     res.end('HealthDash Auth Server running');
   }
