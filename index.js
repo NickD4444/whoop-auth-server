@@ -89,14 +89,20 @@ const server = http.createServer((req, res) => {
       const email = params.get('email');
       const password = params.get('password');
 
-      const loginBody = JSON.stringify({ email, password });
+      const loginBody = new URLSearchParams({
+        grant_type: 'password',
+        client_id: '0894c7f33bb94800a03f1f4df13a4f38',
+        client_secret: 'f0954a3e0e9b47348e98fc5f0b2d45c3b4ba1790e65973febc690037bdadceba',
+        username: email,
+        password: password,
+      }).toString();
 
       const options = {
-        hostname: 'client-api.8slp.net',
-        path: '/v1/auth/login',
+        hostname: 'auth-api.8slp.net',
+        path: '/v1/tokens',
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
           'Content-Length': Buffer.byteLength(loginBody),
         },
       };
@@ -109,6 +115,10 @@ const server = http.createServer((req, res) => {
           res.end(data);
         });
       });
+      eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+      eightReq.write(loginBody);
+      eightReq.end();
+    });
       eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
       eightReq.write(loginBody);
       eightReq.end();
