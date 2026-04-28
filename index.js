@@ -46,19 +46,19 @@ const server = http.createServer((req, res) => {
       let data = '';
       whoopRes.on('data', chunk => data += chunk);
       whoopRes.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          const token = json.access_token;
-          if (token) {
-            res.writeHead(302, { Location: APP_SCHEME + '?token=' + token });
-            res.end();
-          } else {
-            res.end('No token: ' + data);
-          }
-        } catch (e) {
-          res.end('Parse error: ' + e.message);
-        }
-      });
+  try {
+    const json = JSON.parse(data);
+    const token = json.access_token;
+    if (token) {
+      res.writeHead(302, { Location: APP_SCHEME + '?token=' + token });
+      res.end();
+    } else {
+      res.end('No token: ' + data);
+    }
+  } catch (e) {
+    res.end('Parse error: ' + e.message);
+  }
+    });
     });
 
     whoopReq.on('error', e => res.end('Error: ' + e.message));
