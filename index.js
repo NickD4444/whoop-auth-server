@@ -90,6 +90,8 @@ const server = http.createServer((req, res) => {
 
       const loginBody = new URLSearchParams({
   grant_type: 'password',
+  client_id: '0894c7f33bb94800a03f1f4df13a4f38',
+  client_secret: 'f0954a3ed5763ba3d06834c73731a32f15f168f47d4f164751275def86db0c76',
   username: email,
   password: password,
 }).toString();
