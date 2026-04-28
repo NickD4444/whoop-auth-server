@@ -179,6 +179,42 @@ const server = http.createServer((req, res) => {
       whoopReq.write(body);
       whoopReq.end();
     });
+  } else if (parsed.pathname === '/eightsleep/refresh') {
+    let reqBody = '';
+    req.on('data', chunk => reqBody += chunk);
+    req.on('end', () => {
+      const params = new URLSearchParams(reqBody);
+      const refreshToken = params.get('refresh_token');
+
+      const refreshBody = new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: '0894c7f33bb94800a03f1f4df13a4f38',
+        client_secret: 'f0954a3ed5763ba3d06834c73731a32f15f168f47d4f164751275def86db0c76',
+        refresh_token: refreshToken,
+      }).toString();
+
+      const options = {
+        hostname: 'auth-api.8slp.net',
+        path: '/v1/tokens',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(refreshBody),
+        },
+      };
+
+      const eightReq = https.request(options, (eightRes) => {
+        let data = '';
+        eightRes.on('data', chunk => data += chunk);
+        eightRes.on('end', () => {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(data);
+        });
+      });
+      eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+      eightReq.write(refreshBody);
+      eightReq.end();
+    });
     
   } else {
     res.end('HealthDash Auth Server running');
