@@ -13,12 +13,12 @@ const server = http.createServer((req, res) => {
   if (parsed.pathname === '/callback') {
     const code = parsed.query.code;
     const error = parsed.query.error;
-    
+
     if (error) {
       res.end('Whoop error: ' + error + ' - ' + parsed.query.error_description);
       return;
     }
-    
+
     if (!code) {
       res.end('No code. Full URL: ' + req.url);
       return;
@@ -46,25 +46,26 @@ const server = http.createServer((req, res) => {
       let data = '';
       whoopRes.on('data', chunk => data += chunk);
       whoopRes.on('end', () => {
-  try {
-    const json = JSON.parse(data);
-    const token = json.access_token;
-    if (token) {
-      res.writeHead(302, { Location: APP_SCHEME + '?token=' + token });
-      res.end();
-    } else {
-      res.end('No token: ' + data);
-    }
-  } catch (e) {
-    res.end('Parse error: ' + e.message);
-  }
-    });
+        try {
+          const json = JSON.parse(data);
+          const token = json.access_token;
+          if (token) {
+            res.writeHead(302, { Location: APP_SCHEME + '?token=' + token });
+            res.end();
+          } else {
+            res.end('No token: ' + data);
+          }
+        } catch (e) {
+          res.end('Parse error: ' + e.message);
+        }
+      });
     });
 
     whoopReq.on('error', e => res.end('Error: ' + e.message));
     whoopReq.write(body);
     whoopReq.end();
- } else if (parsed.pathname === '/test') {
+
+  } else if (parsed.pathname === '/test') {
     const token = parsed.query.token;
     const options = {
       hostname: 'api.prod.whoop.com',
@@ -79,68 +80,65 @@ const server = http.createServer((req, res) => {
     });
     testReq.on('error', e => res.end('Error: ' + e.message));
     testReq.end();
- } else if (parsed.pathname === '/eightsleep/login') {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', () => {
-    const params = new URLSearchParams(body);
-    const email = params.get('email');
-    const password = params.get('password');
 
-    const loginBody = JSON.stringify({ email, password });
+  } else if (parsed.pathname === '/eightsleep/login') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      const params = new URLSearchParams(body);
+      const email = params.get('email');
+      const password = params.get('password');
+
+      const loginBody = JSON.stringify({ email, password });
+
+      const options = {
+        hostname: 'client-api.8slp.net',
+        path: '/v1/auth/login',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(loginBody),
+        },
+      };
+
+      const eightReq = https.request(options, (eightRes) => {
+        let data = '';
+        eightRes.on('data', chunk => data += chunk);
+        eightRes.on('end', () => {
+          res.setHeader('Content-Type', 'application/json');
+          res.end(data);
+        });
+      });
+      eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+      eightReq.write(loginBody);
+      eightReq.end();
+    });
+
+  } else if (parsed.pathname === '/eightsleep/sleep') {
+    const token = parsed.query.token;
+    const userId = parsed.query.userId;
 
     const options = {
       hostname: 'client-api.8slp.net',
-      path: '/v1/auth/login',
-      method: 'POST',
+      path: `/v1/users/${userId}/intervals?start=2020-01-01&end=2030-01-01&limit=1`,
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(loginBody),
+        'Authorization': 'Bearer ' + token,
+        'accept': 'application/json',
       },
     };
 
-    const eightReq = https.request(options, (eightRes) => {
+    const sleepReq = https.request(options, (sleepRes) => {
       let data = '';
-      eightRes.on('data', chunk => data += chunk);
-      eightRes.on('end', () => {
+      sleepRes.on('data', chunk => data += chunk);
+      sleepReq.on('end', () => {
         res.setHeader('Content-Type', 'application/json');
         res.end(data);
       });
     });
-    eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
-    eightReq.write(loginBody);
-    eightReq.end();
-  });
-    });
-    eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
-    eightReq.write(loginBody);
-    eightReq.end();
-  });
+    sleepReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+    sleepReq.end();
 
-} else if (parsed.pathname === '/eightsleep/sleep') {
-  const token = parsed.query.token;
-  const userId = parsed.query.userId;
-
-  const options = {
-    hostname: 'client-api.8slp.net',
-    path: `/v1/users/${userId}/intervals?start=2020-01-01&end=2030-01-01&limit=1`,
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + token,
-      'accept': 'application/json',
-    },
-  };
-
-  const sleepReq = https.request(options, (sleepRes) => {
-    let data = '';
-    sleepRes.on('data', chunk => data += chunk);
-    sleepRes.on('end', () => {
-      res.setHeader('Content-Type', 'application/json');
-      res.end(data);
-    });
-  });
-  sleepReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
-  sleepReq.end();
   } else {
     res.end('HealthDash Auth Server running');
   }
