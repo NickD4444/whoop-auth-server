@@ -79,6 +79,69 @@ const server = http.createServer((req, res) => {
     });
     testReq.on('error', e => res.end('Error: ' + e.message));
     testReq.end();
+  } else if (parsed.pathname === '/eightsleep/login') {
+  let body = '';
+  req.on('data', chunk => body += chunk);
+  req.on('end', () => {
+    const params = new URLSearchParams(body);
+    const email = params.get('email');
+    const password = params.get('password');
+
+    const loginBody = JSON.stringify({
+      email,
+      password,
+      client_id: '0894c7f33bb94800a03f1f4df13a4f38',
+      client_secret: 'f0954a3e0e9b47348e98fc5f0b2d45c3b4ba1790e65973febc690037bdadceba',
+      grant_type: 'password',
+    });
+
+    const options = {
+      hostname: 'auth-api.8slp.net',
+      path: '/v1/tokens',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(loginBody),
+      },
+    };
+
+    const eightReq = https.request(options, (eightRes) => {
+      let data = '';
+      eightRes.on('data', chunk => data += chunk);
+      eightRes.on('end', () => {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(data);
+      });
+    });
+    eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+    eightReq.write(loginBody);
+    eightReq.end();
+  });
+
+} else if (parsed.pathname === '/eightsleep/sleep') {
+  const token = parsed.query.token;
+  const userId = parsed.query.userId;
+
+  const options = {
+    hostname: 'client-api.8slp.net',
+    path: `/v1/users/${userId}/intervals?start=2020-01-01&end=2030-01-01&limit=1`,
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'accept': 'application/json',
+    },
+  };
+
+  const sleepReq = https.request(options, (sleepRes) => {
+    let data = '';
+    sleepRes.on('data', chunk => data += chunk);
+    sleepRes.on('end', () => {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(data);
+    });
+  });
+  sleepReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
+  sleepReq.end();
   } else {
     res.end('HealthDash Auth Server running');
   }
