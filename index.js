@@ -64,6 +64,21 @@ const server = http.createServer((req, res) => {
     whoopReq.on('error', e => res.end('Error: ' + e.message));
     whoopReq.write(body);
     whoopReq.end();
+ } else if (parsed.pathname === '/test') {
+    const token = parsed.query.token;
+    const options = {
+      hostname: 'api.prod.whoop.com',
+      path: '/developer/v1/user/profile/basic',
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token },
+    };
+    const testReq = https.request(options, (testRes) => {
+      let data = '';
+      testRes.on('data', chunk => data += chunk);
+      testRes.on('end', () => res.end('Status: ' + testRes.statusCode + ' Body: ' + data));
+    });
+    testReq.on('error', e => res.end('Error: ' + e.message));
+    testReq.end();
   } else {
     res.end('HealthDash Auth Server running');
   }
