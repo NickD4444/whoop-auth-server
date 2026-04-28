@@ -60,7 +60,6 @@ const server = http.createServer((req, res) => {
         }
       });
     });
-
     whoopReq.on('error', e => res.end('Error: ' + e.message));
     whoopReq.write(body);
     whoopReq.end();
@@ -82,10 +81,10 @@ const server = http.createServer((req, res) => {
     testReq.end();
 
   } else if (parsed.pathname === '/eightsleep/login') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
+    let reqBody = '';
+    req.on('data', chunk => reqBody += chunk);
     req.on('end', () => {
-      const params = new URLSearchParams(body);
+      const params = new URLSearchParams(reqBody);
       const email = params.get('email');
       const password = params.get('password');
 
@@ -119,10 +118,6 @@ const server = http.createServer((req, res) => {
       eightReq.write(loginBody);
       eightReq.end();
     });
-      eightReq.on('error', e => res.end(JSON.stringify({ error: e.message })));
-      eightReq.write(loginBody);
-      eightReq.end();
-    });
 
   } else if (parsed.pathname === '/eightsleep/sleep') {
     const token = parsed.query.token;
@@ -141,7 +136,7 @@ const server = http.createServer((req, res) => {
     const sleepReq = https.request(options, (sleepRes) => {
       let data = '';
       sleepRes.on('data', chunk => data += chunk);
-      sleepReq.on('end', () => {
+      sleepRes.on('end', () => {
         res.setHeader('Content-Type', 'application/json');
         res.end(data);
       });
